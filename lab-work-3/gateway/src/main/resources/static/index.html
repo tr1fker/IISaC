@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Платёжная система — GraphQL</title>
+  <style>
+    body { max-width: 1100px; margin: 32px auto; padding: 0 20px; font: 16px system-ui, sans-serif; color: #172033; background: #f5f7fb; }
+    h1 { font-size: 26px; } p { line-height: 1.5; }
+    .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; }
+    textarea, pre { box-sizing: border-box; width: 100%; min-height: 390px; margin: 0; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font: 14px/1.5 Consolas, monospace; }
+    textarea { resize: vertical; } pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+    button { margin: 16px 0; padding: 10px 20px; background: #2457cf; color: white; border: 0; border-radius: 6px; cursor: pointer; font: inherit; }
+    button:disabled { opacity: .6; cursor: wait; }
+    @media (max-width: 700px) { .columns { grid-template-columns: 1fr; } textarea, pre { min-height: 260px; } }
+  </style>
+</head>
+<body>
+  <h1>Платёжная система: GraphQL API</h1>
+  <p>Измените запрос слева и нажмите «Выполнить». Результат появится справа. Другие примеры есть в README проекта.</p>
+  <div class="columns">
+    <div><label for="query">GraphQL-запрос</label><textarea id="query" spellcheck="false">query {
+  payment(id: "p1") {
+    id amount currency status
+    client { name email }
+    merchant { name }
+    refunds { amount status }
+    transactions { id type amount }
+  }
+  payments { id amount status }
+}</textarea></div>
+    <div><label for="result">Ответ сервера</label><pre id="result" aria-live="polite">Нажмите «Выполнить».</pre></div>
+  </div>
+  <button id="run" type="button">Выполнить</button>
+  <script>
+    const button = document.getElementById('run');
+    const result = document.getElementById('result');
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      result.textContent = 'Выполняется запрос…';
+      try {
+        const response = await fetch('/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: document.getElementById('query').value })
+        });
+        const body = await response.json();
+        result.textContent = JSON.stringify(body, null, 2);
+      } catch (error) {
+        result.textContent = 'Не удалось выполнить запрос: ' + error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
