@@ -1,0 +1,29 @@
+type Query {
+ user(id: ID!): User
+ payment(id: ID!): Payment
+ payments(filter: PaymentFilterInput, sort: PaymentSortInput): [Payment!]!
+ paymentSummary(filter: PaymentFilterInput): PaymentSummary!
+ transactions(paymentId: ID, clientId: ID): [Transaction!]!
+ paymentMethods(clientId: ID!): [PaymentMethod!]!
+ refunds(paymentId: ID): [Refund!]!
+ analytics(merchantId: ID!, period: DateRangeInput!): Analytics
+ reports(merchantId: ID!, period: DateRangeInput!): [FinancialReport!]!
+}
+type Mutation { createPayment(input: CreatePaymentInput!): Payment!, completePayment(id: ID!): Payment!, cancelPayment(id: ID!): Payment! }
+input CreatePaymentInput { clientId: ID!, merchantId: ID!, paymentMethodId: ID!, amount: Float!, currency: String!, description: String }
+type PaymentSummary { count: Int!, totalAmount: Float!, currency: String! }
+input PaymentFilterInput { clientId: ID, merchantId: ID, currency: String, status: PaymentStatus, dateFrom: String, dateTo: String, minAmount: Float, maxAmount: Float }
+input PaymentSortInput { field: PaymentSortField = CREATED_AT, direction: SortDirection = ASC }
+input DateRangeInput { from: String!, to: String! }
+enum PaymentStatus { CREATED SUCCESS CANCELLED }
+enum PaymentSortField { CREATED_AT AMOUNT }
+enum SortDirection { ASC DESC }
+type User { id: ID!, name: String!, email: String!, role: String! }
+type Merchant { id: ID!, userId: ID!, name: String!, status: String! }
+type Payment { id: ID!, clientId: ID!, merchantId: ID!, paymentMethodId: ID!, amount: Float!, currency: String!, status: PaymentStatus!, description: String, createdAt: String!, client: User, merchant: Merchant, paymentMethod: PaymentMethod, refunds: [Refund!]!, transactions: [Transaction!]! }
+type PaymentMethod { id: ID!, clientId: ID!, type: String!, lastFour: String!, status: String! }
+type Transaction { id: ID!, paymentId: ID!, clientId: ID!, amount: Float!, currency: String!, type: String!, createdAt: String! }
+type Refund { id: ID!, paymentId: ID!, amount: Float!, currency: String!, status: String!, createdAt: String! }
+type Analytics { id: ID!, merchantId: ID!, periodFrom: String!, periodTo: String!, paymentCount: Int!, totalAmount: Float!, refundAmount: Float!, revenue: Float! }
+type FinancialReport { id: ID!, merchantId: ID!, periodFrom: String!, periodTo: String!, paymentCount: Int!, totalAmount: Float!, refundAmount: Float!, revenue: Float! }
+

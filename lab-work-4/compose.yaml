@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: payments
+      POSTGRES_USER: lab
+      POSTGRES_PASSWORD: lab
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lab -d payments"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  gateway:
+    build: .
+    ports:
+      - "18080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  database:

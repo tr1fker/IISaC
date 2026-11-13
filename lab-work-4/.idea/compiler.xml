@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="payment-service" />
+        <module name="refund-service" />
+        <module name="analytics-service" />
+        <module name="merchant-service" />
+        <module name="transaction-service" />
+        <module name="paymentmethod-service" />
+        <module name="account-service" />
+        <module name="identity-service" />
+        <module name="gateway" />
+        <module name="notification-service" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="account-service" options="-parameters" />
+      <module name="analytics-service" options="-parameters" />
+      <module name="gateway" options="-parameters" />
+      <module name="identity-service" options="-parameters" />
+      <module name="merchant-service" options="-parameters" />
+      <module name="notification-service" options="-parameters" />
+      <module name="payment-service" options="-parameters" />
+      <module name="paymentmethod-service" options="-parameters" />
+      <module name="refund-service" options="-parameters" />
+      <module name="transaction-service" options="-parameters" />
+    </option>
+  </component>
+</project>
