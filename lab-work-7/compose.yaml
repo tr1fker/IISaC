@@ -1,0 +1,224 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: payments
+      POSTGRES_USER: lab
+      POSTGRES_PASSWORD: lab
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lab -d payments"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  auth-service:
+    build:
+      context: .
+      args:
+        SERVICE: auth-service
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET:-lab-demo-secret-change-this-to-at-least-32-bytes}
+      SESSION_SECONDS: ${SESSION_SECONDS:-3600}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  kafka:
+    image: apache/kafka:3.9.0
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+  identity-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: identity
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  merchant-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: merchant
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  payment-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: payment
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  paymentmethod-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: paymentmethod
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  account-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: account
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  refund-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: refund
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  transaction-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: transaction
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  notification-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: notification
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  analytics-service:
+    build:
+      context: .
+      args:
+        SERVICE: service-host
+    environment:
+      SERVICE_NAME: analytics
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+  gateway:
+    build: .
+    ports:
+      - "18080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/payments
+      DB_USER: lab
+      DB_PASSWORD: lab
+      AUTH_URL: http://auth-service:8081
+    depends_on:
+      db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+volumes:
+  kafka-data:
+  database:

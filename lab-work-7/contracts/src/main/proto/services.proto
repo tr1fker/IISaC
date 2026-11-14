@@ -1,0 +1,17 @@
+syntax = "proto3";
+package lab;
+option java_package = "by.lab.contract";
+option java_multiple_files = true;
+// JSON is used only for the existing flexible GraphQL filters and database records.
+service DataService { rpc Call(DataRequest) returns (DataResponse); }
+message DataRequest { string operation = 1; string id = 2; string payload_json = 3; }
+message DataResponse { string payload_json = 1; }
+service PaymentMethodService { rpc ValidatePaymentMethod(ValidatePaymentMethodRequest) returns (ValidatePaymentMethodResponse); }
+message ValidatePaymentMethodRequest { string payment_method_id = 1; string client_id = 2; }
+message ValidatePaymentMethodResponse { bool valid = 1; string status = 2; }
+service AccountService { rpc CheckAccount(CheckAccountRequest) returns (CheckAccountResponse); }
+message CheckAccountRequest { string account_id = 1; string currency = 2; double amount = 3; }
+message CheckAccountResponse { bool allowed = 1; string status = 2; }
+service PaymentService { rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse); }
+message GetPaymentRequest { string payment_id = 1; }
+message GetPaymentResponse { string payment_id = 1; string client_id = 2; string merchant_id = 3; double amount = 4; string currency = 5; string status = 6; }

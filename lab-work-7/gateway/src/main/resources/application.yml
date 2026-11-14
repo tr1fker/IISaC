@@ -1,0 +1,12 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      connect-timeout: 500ms
+      timeout: 500ms
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/payments}
+    username: ${DB_USER:lab}
+    password: ${DB_PASSWORD:lab}
+server:
+  port: 8080
