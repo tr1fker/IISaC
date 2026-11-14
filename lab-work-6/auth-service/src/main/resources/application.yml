@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/payments}
+    username: ${DB_USER:lab}
+    password: ${DB_PASSWORD:lab}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+server:
+  port: 8081
+auth:
+  jwt-secret: ${JWT_SECRET:lab-demo-secret-change-this-to-at-least-32-bytes}
+  session-seconds: ${SESSION_SECONDS:3600}
+
