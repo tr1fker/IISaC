@@ -16,6 +16,7 @@
         <java.version>17</java.version>
     </properties>
     <modules>
+        <module>mock-transport</module>
         <module>identity-service</module>
         <module>merchant-service</module>
         <module>payment-service</module>

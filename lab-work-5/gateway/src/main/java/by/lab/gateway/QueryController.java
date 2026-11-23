@@ -50,18 +50,35 @@ public class QueryController {
  @MutationMapping public Map<String,Object> createPayment(@Argument Map<String,Object> input,DataFetchingEnvironment env) { Map<String,Object> a=actor(env); if(!admin(a) && !(role(a,"CLIENT") && Objects.equals(a.get("id"),input.get("clientId")))) forbid(); return convert(client.createPayment(input)); }
  @MutationMapping public Map<String,Object> completePayment(@Argument String id,DataFetchingEnvironment env) { Map<String,Object> a=actor(env); Map<String,Object> p=visiblePayment(a,id); if(!admin(a) && !(role(a,"MERCHANT") && p!=null && ownsMerchant(a,p.get("merchantId").toString()))) forbid(); return convert(client.transitionPayment(id,"SUCCESS")); }
  @MutationMapping public Map<String,Object> cancelPayment(@Argument String id,DataFetchingEnvironment env) { Map<String,Object> a=actor(env); Map<String,Object> p=visiblePayment(a,id); if(!admin(a) && !(role(a,"CLIENT") && p!=null && a.get("id").equals(p.get("clientId")))) forbid(); return convert(client.transitionPayment(id,"CANCELLED")); }
+ @MutationMapping public Map<String,Object> createRefund(@Argument Map<String,Object> input,DataFetchingEnvironment env) {
+  Map<String,Object> a=actor(env); String id=Objects.toString(input.get("paymentId"),""); Map<String,Object> payment=visiblePayment(a,id);
+  if(payment==null) throw new IllegalArgumentException("Payment not found");
+  if(!admin(a) && !(role(a,"CLIENT") && a.get("id").equals(payment.get("clientId"))) && !(role(a,"MERCHANT") && ownsMerchant(a,payment.get("merchantId").toString()))) forbid();
+  return convert(client.createRefund(id,new java.math.BigDecimal(input.get("amount").toString())));
+ }
+ @MutationMapping public Map<String,Object> addPaymentMethod(@Argument Map<String,Object> input,DataFetchingEnvironment env) {
+  Map<String,Object> a=actor(env); String clientId=Objects.toString(input.get("clientId"),"");
+  if(!admin(a) && !(role(a,"CLIENT") && a.get("id").equals(clientId))) forbid();
+  return convert(client.addPaymentMethod(clientId,Objects.toString(input.get("type"),""),Objects.toString(input.get("lastFour"),"")));
+ }
+ @MutationMapping public boolean removePaymentMethod(@Argument String paymentMethodId,DataFetchingEnvironment env) {
+  Map<String,Object> a=actor(env); Map<String,Object> method=client.find("paymentmethod",paymentMethodId);
+  if(method==null) throw new IllegalArgumentException("Payment method not found");
+  if(!admin(a) && !(role(a,"CLIENT") && a.get("id").equals(method.get("client_id")))) forbid();
+  return client.removePaymentMethod(paymentMethodId);
+ }
  @QueryMapping public List<Map<String,Object>> transactions(@Argument String paymentId,@Argument String clientId,DataFetchingEnvironment env) {
   Map<String,Object> a=actor(env);
-  return all("transaction").stream().filter(t -> matches(t,"paymentId",paymentId) && matches(t,"clientId",clientId)).filter(t -> { Map<String,Object> p=one("payment",t.get("paymentId").toString()); return p!=null && canPayment(a,p); }).toList();
+  Map<String,Object> f=new HashMap<>(); f.put("paymentId",paymentId); f.put("clientId",clientId); return client.search("transaction",f).stream().map(this::convert).filter(t -> { Map<String,Object> p=one("payment",t.get("paymentId").toString()); return p!=null && canPayment(a,p); }).toList();
  }
- @QueryMapping public List<Map<String,Object>> paymentMethods(@Argument String clientId,DataFetchingEnvironment env) { Map<String,Object> a=actor(env); if(!admin(a) && !(role(a,"CLIENT") && a.get("id").equals(clientId))) forbid(); return all("paymentmethod").stream().filter(p -> matches(p,"clientId",clientId)).toList(); }
+ @QueryMapping public List<Map<String,Object>> paymentMethods(@Argument String clientId,DataFetchingEnvironment env) { Map<String,Object> a=actor(env); if(!admin(a) && !(role(a,"CLIENT") && a.get("id").equals(clientId))) forbid(); return client.search("paymentmethod",Map.of("clientId",clientId)).stream().map(this::convert).toList(); }
  @QueryMapping public List<Map<String,Object>> refunds(@Argument String paymentId,DataFetchingEnvironment env) {
-  Map<String,Object> a=actor(env); return all("refund").stream().filter(r -> matches(r,"paymentId",paymentId)).filter(r -> { Map<String,Object> p=one("payment",r.get("paymentId").toString()); return p!=null && canPayment(a,p); }).toList();
+  Map<String,Object> a=actor(env); Map<String,Object> f=new HashMap<>(); f.put("paymentId",paymentId); return client.search("refund",f).stream().map(this::convert).filter(r -> { Map<String,Object> p=one("payment",r.get("paymentId").toString()); return p!=null && canPayment(a,p); }).toList();
  }
- private List<Map<String,Object>> statistics(Map<String,Object> a,String merchantId,Map<String,Object> period) { if(!admin(a) && !(role(a,"MERCHANT") && ownsMerchant(a,merchantId))) forbid(); return all("analytics").stream().filter(x -> matches(x,"merchantId",merchantId) && x.get("periodFrom").toString().compareTo(period.get("to").toString())<=0 && x.get("periodTo").toString().compareTo(period.get("from").toString())>=0).toList(); }
- @QueryMapping public Map<String,Object> analytics(@Argument String merchantId,@Argument Map<String,Object> period,DataFetchingEnvironment env) { return statistics(actor(env),merchantId,period).stream().findFirst().orElse(null); }
- @QueryMapping public List<Map<String,Object>> reports(@Argument String merchantId,@Argument Map<String,Object> period,DataFetchingEnvironment env) { return statistics(actor(env),merchantId,period); }
- @SchemaMapping(typeName="Payment",field="client") public Map<String,Object> client(Map<String,Object> payment) { return one("identity",payment.get("clientId").toString()); }
+ private void authorizeAnalytics(Map<String,Object> a,String merchantId) { if(!admin(a) && !(role(a,"MERCHANT") && ownsMerchant(a,merchantId))) forbid(); }
+ @QueryMapping public Map<String,Object> analytics(@Argument String merchantId,@Argument Map<String,Object> period,DataFetchingEnvironment env) { authorizeAnalytics(actor(env),merchantId); return convert(client.analytics(merchantId,period)); }
+ @QueryMapping public List<Map<String,Object>> reports(@Argument String merchantId,@Argument Map<String,Object> period,DataFetchingEnvironment env) { authorizeAnalytics(actor(env),merchantId); return client.reports(merchantId,period).stream().map(this::convert).toList(); }
+ @SchemaMapping(typeName="Payment",field="client") public Map<String,Object> client(Map<String,Object> payment,DataFetchingEnvironment env) { Map<String,Object> a=actor(env); if(!admin(a) && !a.get("id").equals(payment.get("clientId"))) forbid(); return one("identity",payment.get("clientId").toString()); }
  @SchemaMapping(typeName="Payment",field="merchant") public Map<String,Object> merchant(Map<String,Object> payment) { return one("merchant",payment.get("merchantId").toString()); }
  @SchemaMapping(typeName="Payment",field="paymentMethod") public Map<String,Object> paymentMethod(Map<String,Object> payment,DataFetchingEnvironment env) { Map<String,Object> a=actor(env); if(!admin(a) && !a.get("id").equals(payment.get("clientId"))) forbid(); return one("paymentmethod",payment.get("paymentMethodId").toString()); }
  @SchemaMapping(typeName="Payment",field="refunds") public List<Map<String,Object>> paymentRefunds(Map<String,Object> payment,DataFetchingEnvironment env) { return refunds(payment.get("id").toString(),env); }

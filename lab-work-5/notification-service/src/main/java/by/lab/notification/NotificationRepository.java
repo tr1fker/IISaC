@@ -8,4 +8,5 @@ public class NotificationRepository {
  public NotificationRepository(JdbcTemplate db) { this.db = db; }
  public List<Map<String,Object>> findAll() { return db.queryForList("select id,recipient_id,message,status,created_at from notification.notifications order by id"); }
  public Optional<Map<String,Object>> findById(String id) { return db.queryForList("select id,recipient_id,message,status,created_at from notification.notifications where id = ?", id).stream().findFirst(); }
+ public void insert(String id,String recipient,String message,String createdAt) { db.update("insert into notification.notifications(id,recipient_id,message,status,created_at) values (?,?,?,'CREATED',?) on conflict (id) do nothing",id,recipient,message,createdAt); }
 }
