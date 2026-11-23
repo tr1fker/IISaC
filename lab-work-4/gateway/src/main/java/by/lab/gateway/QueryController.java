@@ -23,12 +23,14 @@ public class QueryController {
  @MutationMapping public Map<String,Object> createPayment(@Argument Map<String,Object> input) { return convert(client.createPayment(input)); }
  @MutationMapping public Map<String,Object> completePayment(@Argument String id) { return convert(client.transitionPayment(id,"SUCCESS")); }
  @MutationMapping public Map<String,Object> cancelPayment(@Argument String id) { return convert(client.transitionPayment(id,"CANCELLED")); }
- @QueryMapping public List<Map<String,Object>> transactions(@Argument String paymentId,@Argument String clientId) { return all("transaction").stream().filter(t -> matches(t,"paymentId",paymentId) && matches(t,"clientId",clientId)).toList(); }
- @QueryMapping public List<Map<String,Object>> paymentMethods(@Argument String clientId) { return all("paymentmethod").stream().filter(p -> matches(p,"clientId",clientId)).toList(); }
- @QueryMapping public List<Map<String,Object>> refunds(@Argument String paymentId) { return all("refund").stream().filter(r -> matches(r,"paymentId",paymentId)).toList(); }
- private List<Map<String,Object>> statistics(String merchantId,Map<String,Object> period) { return all("analytics").stream().filter(a -> matches(a,"merchantId",merchantId) && a.get("periodFrom").toString().compareTo(period.get("to").toString())<=0 && a.get("periodTo").toString().compareTo(period.get("from").toString())>=0).toList(); }
- @QueryMapping public Map<String,Object> analytics(@Argument String merchantId,@Argument Map<String,Object> period) { return statistics(merchantId,period).stream().findFirst().orElse(null); }
- @QueryMapping public List<Map<String,Object>> reports(@Argument String merchantId,@Argument Map<String,Object> period) { return statistics(merchantId,period); }
+ @MutationMapping public Map<String,Object> createRefund(@Argument Map<String,Object> input) { return convert(client.createRefund(Objects.toString(input.get("paymentId"),null),new java.math.BigDecimal(input.get("amount").toString()))); }
+ @MutationMapping public Map<String,Object> addPaymentMethod(@Argument Map<String,Object> input) { return convert(client.addPaymentMethod(Objects.toString(input.get("clientId"),null),Objects.toString(input.get("type"),null),Objects.toString(input.get("lastFour"),null))); }
+ @MutationMapping public boolean removePaymentMethod(@Argument String paymentMethodId) { return client.removePaymentMethod(paymentMethodId); }
+ @QueryMapping public List<Map<String,Object>> transactions(@Argument String paymentId,@Argument String clientId) { Map<String,Object> filter=new HashMap<>(); filter.put("paymentId",paymentId); filter.put("clientId",clientId); return client.search("transaction",filter).stream().map(this::convert).toList(); }
+ @QueryMapping public List<Map<String,Object>> paymentMethods(@Argument String clientId) { return client.search("paymentmethod",Map.of("clientId",clientId)).stream().map(this::convert).toList(); }
+ @QueryMapping public List<Map<String,Object>> refunds(@Argument String paymentId) { Map<String,Object> filter=new HashMap<>(); filter.put("paymentId",paymentId); return client.search("refund",filter).stream().map(this::convert).toList(); }
+ @QueryMapping public Map<String,Object> analytics(@Argument String merchantId,@Argument Map<String,Object> period) { return convert(client.analytics(merchantId,period)); }
+ @QueryMapping public List<Map<String,Object>> reports(@Argument String merchantId,@Argument Map<String,Object> period) { return client.reports(merchantId,period).stream().map(this::convert).toList(); }
  @SchemaMapping(typeName="Payment",field="client") public Map<String,Object> client(Map<String,Object> payment) { return one("identity",payment.get("clientId").toString()); }
  @SchemaMapping(typeName="Payment",field="merchant") public Map<String,Object> merchant(Map<String,Object> payment) { return one("merchant",payment.get("merchantId").toString()); }
  @SchemaMapping(typeName="Payment",field="paymentMethod") public Map<String,Object> paymentMethod(Map<String,Object> payment) { return one("paymentmethod",payment.get("paymentMethodId").toString()); }

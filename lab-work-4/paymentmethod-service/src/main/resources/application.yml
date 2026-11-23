@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/paymentmethod}
+    username: ${DB_USER:paymentmethod}
+    password: ${DB_PASSWORD:paymentmethod}
+server:
+  port: ${PORT:8080}

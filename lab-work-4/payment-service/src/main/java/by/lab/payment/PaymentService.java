@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 public class PaymentService {
  private final PaymentRepository repository;
  private final PaymentParticipants participants;
- public PaymentService(PaymentRepository repository,PaymentParticipants participants) { this.repository=repository; this.participants=participants; }
+ private final PaymentWorkflow workflow;
+ public PaymentService(PaymentRepository repository,PaymentParticipants participants,PaymentWorkflow workflow) { this.repository=repository; this.participants=participants; this.workflow=workflow; }
  public List<Map<String,Object>> list() { return repository.findAll(); }
  public Map<String,Object> find(String id) { return repository.findById(id).orElse(null); }
  private static String required(Map<String,Object> input,String key) { Object value=input.get(key); if(value==null || value.toString().isBlank()) throw new IllegalArgumentException(key+" is required"); return value.toString().trim(); }
@@ -26,8 +27,9 @@ public class PaymentService {
   repository.insert(id,client,merchant,method,sum,currency,(String)input.get("description"),Instant.now().toString()); return find(id);
  }
  public Map<String,Object> transition(String id,String status) {
-  if(repository.transition(id,status)==0) { if(find(id)==null) throw new IllegalArgumentException("Payment not found"); throw new IllegalArgumentException("Only a CREATED payment can be "+status.toLowerCase(Locale.ROOT)); }
-  return find(id);
+  workflow.start(id,status);
+  try { return workflow.execute(id); }
+  catch(PaymentRejectedException e) { workflow.reject(id,e.getMessage()); throw e; }
  }
  private static Instant date(String value,boolean end) { try { if(value.length()==10) { LocalDate d=LocalDate.parse(value); return (end?d.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusNanos(1):d.atStartOfDay(ZoneOffset.UTC).toInstant()); } return Instant.parse(value); } catch(DateTimeParseException e) { throw new IllegalArgumentException("Invalid date; use YYYY-MM-DD or an ISO-8601 instant"); } }
  public List<Map<String,Object>> search(Map<String,Object> filter,Map<String,Object> sort) {

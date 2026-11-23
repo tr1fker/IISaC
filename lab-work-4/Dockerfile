@@ -3,7 +3,8 @@ WORKDIR /app
 COPY . .
 RUN mvn -B package -DskipTests
 FROM eclipse-temurin:17-jre
+ARG SERVICE=gateway
 WORKDIR /app
-COPY --from=build /app/gateway/target/gateway-1.0.0.jar app.jar
+COPY --from=build /app/${SERVICE}/target/${SERVICE}-1.0.0.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
