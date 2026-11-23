@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/notification}
+    username: ${DB_USER:notification}
+    password: ${DB_PASSWORD:notification}
+server:
+  port: ${PORT:8080}

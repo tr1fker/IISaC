@@ -24,4 +24,4 @@ INSERT INTO payment.payments VALUES ('p1','u1','m1','pm1',125.50,'BYN','SUCCESS'
 INSERT INTO refund.refunds VALUES ('r1','p1',25.00,'BYN','SUCCESS','2026-01-12T09:00:00Z');
 INSERT INTO transaction.transactions VALUES ('t1','p1','u1',125.50,'BYN','PAYMENT','2026-01-10T12:01:00Z'),('t2','p1','u1',25.00,'BYN','REFUND','2026-01-12T09:00:00Z');
 INSERT INTO notification.notifications VALUES ('n1','u1','Payment completed','SENT','2026-01-10T12:01:00Z');
-INSERT INTO analytics.payment_statistics VALUES ('s1','m1','2026-01-01','2026-01-31',1,125.50,25.00,100.50),('s2','m1','2026-02-01','2026-02-28',1,45.00,0.00,45.00);
+INSERT INTO analytics.payment_statistics VALUES ('s1','m1','2026-01-01','2026-01-31',1,125.50,25.00,100.50),('s2','m1','2026-02-01','2026-02-28',0,0.00,0.00,0.00);

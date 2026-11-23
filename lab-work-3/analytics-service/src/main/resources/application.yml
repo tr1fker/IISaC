@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/analytics}
+    username: ${DB_USER:analytics}
+    password: ${DB_PASSWORD:analytics}
+server:
+  port: ${PORT:8080}

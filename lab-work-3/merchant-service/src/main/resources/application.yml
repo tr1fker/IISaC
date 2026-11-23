@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/merchant}
+    username: ${DB_USER:merchant}
+    password: ${DB_PASSWORD:merchant}
+server:
+  port: ${PORT:8080}

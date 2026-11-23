@@ -1,30 +1,268 @@
 services:
-  db:
+  identity-db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: payments
-      POSTGRES_USER: lab
-      POSTGRES_PASSWORD: lab
-    ports:
-      - "127.0.0.1:15432:5432"
+      POSTGRES_DB: identity
+      POSTGRES_USER: identity
+      POSTGRES_PASSWORD: identity
     volumes:
-      - database:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - identity-data:/var/lib/postgresql/data
+      - ./db/identity/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lab -d payments"]
+      test: ["CMD-SHELL", "pg_isready -U identity -d identity"]
       interval: 5s
       timeout: 5s
       retries: 20
+  identity-service:
+    build:
+      context: .
+      args:
+        SERVICE: identity-service
+    environment:
+      DB_URL: jdbc:postgresql://identity-db:5432/identity
+      DB_USER: identity
+      DB_PASSWORD: identity
+    depends_on:
+      identity-db:
+        condition: service_healthy
+  merchant-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: merchant
+      POSTGRES_USER: merchant
+      POSTGRES_PASSWORD: merchant
+    volumes:
+      - merchant-data:/var/lib/postgresql/data
+      - ./db/merchant/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U merchant -d merchant"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  merchant-service:
+    build:
+      context: .
+      args:
+        SERVICE: merchant-service
+    environment:
+      DB_URL: jdbc:postgresql://merchant-db:5432/merchant
+      DB_USER: merchant
+      DB_PASSWORD: merchant
+    depends_on:
+      merchant-db:
+        condition: service_healthy
+  payment-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: payment
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: payment
+    volumes:
+      - payment-data:/var/lib/postgresql/data
+      - ./db/payment/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment -d payment"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  payment-service:
+    build:
+      context: .
+      args:
+        SERVICE: payment-service
+    environment:
+      DB_URL: jdbc:postgresql://payment-db:5432/payment
+      DB_USER: payment
+      DB_PASSWORD: payment
+    depends_on:
+      payment-db:
+        condition: service_healthy
+  paymentmethod-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: paymentmethod
+      POSTGRES_USER: paymentmethod
+      POSTGRES_PASSWORD: paymentmethod
+    volumes:
+      - paymentmethod-data:/var/lib/postgresql/data
+      - ./db/paymentmethod/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paymentmethod -d paymentmethod"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  paymentmethod-service:
+    build:
+      context: .
+      args:
+        SERVICE: paymentmethod-service
+    environment:
+      DB_URL: jdbc:postgresql://paymentmethod-db:5432/paymentmethod
+      DB_USER: paymentmethod
+      DB_PASSWORD: paymentmethod
+    depends_on:
+      paymentmethod-db:
+        condition: service_healthy
+  account-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: account
+      POSTGRES_USER: account
+      POSTGRES_PASSWORD: account
+    volumes:
+      - account-data:/var/lib/postgresql/data
+      - ./db/account/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U account -d account"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  account-service:
+    build:
+      context: .
+      args:
+        SERVICE: account-service
+    environment:
+      DB_URL: jdbc:postgresql://account-db:5432/account
+      DB_USER: account
+      DB_PASSWORD: account
+    depends_on:
+      account-db:
+        condition: service_healthy
+  refund-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: refund
+      POSTGRES_USER: refund
+      POSTGRES_PASSWORD: refund
+    volumes:
+      - refund-data:/var/lib/postgresql/data
+      - ./db/refund/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U refund -d refund"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  refund-service:
+    build:
+      context: .
+      args:
+        SERVICE: refund-service
+    environment:
+      DB_URL: jdbc:postgresql://refund-db:5432/refund
+      DB_USER: refund
+      DB_PASSWORD: refund
+    depends_on:
+      refund-db:
+        condition: service_healthy
+  transaction-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: transaction
+      POSTGRES_USER: transaction
+      POSTGRES_PASSWORD: transaction
+    volumes:
+      - transaction-data:/var/lib/postgresql/data
+      - ./db/transaction/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U transaction -d transaction"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  transaction-service:
+    build:
+      context: .
+      args:
+        SERVICE: transaction-service
+    environment:
+      DB_URL: jdbc:postgresql://transaction-db:5432/transaction
+      DB_USER: transaction
+      DB_PASSWORD: transaction
+    depends_on:
+      transaction-db:
+        condition: service_healthy
+  notification-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: notification
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: notification
+    volumes:
+      - notification-data:/var/lib/postgresql/data
+      - ./db/notification/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification -d notification"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  notification-service:
+    build:
+      context: .
+      args:
+        SERVICE: notification-service
+    environment:
+      DB_URL: jdbc:postgresql://notification-db:5432/notification
+      DB_USER: notification
+      DB_PASSWORD: notification
+    depends_on:
+      notification-db:
+        condition: service_healthy
+  analytics-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: analytics
+      POSTGRES_PASSWORD: analytics
+    volumes:
+      - analytics-data:/var/lib/postgresql/data
+      - ./db/analytics/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics -d analytics"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  analytics-service:
+    build:
+      context: .
+      args:
+        SERVICE: analytics-service
+    environment:
+      DB_URL: jdbc:postgresql://analytics-db:5432/analytics
+      DB_USER: analytics
+      DB_PASSWORD: analytics
+    depends_on:
+      analytics-db:
+        condition: service_healthy
   gateway:
     build: .
     ports:
       - "18080:8080"
-    environment:
-      DB_URL: jdbc:postgresql://db:5432/payments
-      DB_USER: lab
-      DB_PASSWORD: lab
     depends_on:
-      db:
-        condition: service_healthy
+      identity-service:
+        condition: service_started
+      merchant-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      paymentmethod-service:
+        condition: service_started
+      account-service:
+        condition: service_started
+      refund-service:
+        condition: service_started
+      transaction-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      analytics-service:
+        condition: service_started
 volumes:
-  database:
+  identity-data:
+  merchant-data:
+  payment-data:
+  paymentmethod-data:
+  account-data:
+  refund-data:
+  transaction-data:
+  notification-data:
+  analytics-data:
