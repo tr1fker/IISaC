@@ -4,3 +4,9 @@
 .vscode
 
 .m2
+
+.lab7-image
+.verify-*
+compose.verify.yaml
+*.pdf
+*.docx

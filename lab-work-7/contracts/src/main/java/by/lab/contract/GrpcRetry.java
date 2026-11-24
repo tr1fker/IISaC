@@ -1,10 +1,10 @@
-package by.lab.host;
+package by.lab.contract;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import java.util.function.Supplier;
-final class GrpcRetry {
+public final class GrpcRetry {
  private static final org.slf4j.Logger log=org.slf4j.LoggerFactory.getLogger(GrpcRetry.class);
- static <T> T call(String service,String operation,Supplier<T> request) {
+ public static <T> T call(String service,String operation,Supplier<T> request) {
   for(int attempt=1;;attempt++) {
    try { log.info("gRPC service={} operation={} attempt={}",service,operation,attempt); return request.get(); }
    catch(StatusRuntimeException e) {
