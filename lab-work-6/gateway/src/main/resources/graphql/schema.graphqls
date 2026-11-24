@@ -9,8 +9,10 @@ type Query {
  analytics(merchantId: ID!, period: DateRangeInput!): Analytics
  reports(merchantId: ID!, period: DateRangeInput!): [FinancialReport!]!
 }
-type Mutation { register(name: String!, email: String!, password: String!): User!, login(email: String!, password: String!): AuthPayload!, logout: Boolean!, createPayment(input: CreatePaymentInput!): Payment!, completePayment(id: ID!): Payment!, cancelPayment(id: ID!): Payment! }
+type Mutation { register(name: String!, email: String!, password: String!): User!, login(email: String!, password: String!): AuthPayload!, logout: Boolean!, createPayment(input: CreatePaymentInput!): Payment!, completePayment(id: ID!): Payment!, cancelPayment(id: ID!): Payment!, createRefund(input: CreateRefundInput!): Refund!, addPaymentMethod(input: AddPaymentMethodInput!): PaymentMethod!, removePaymentMethod(paymentMethodId: ID!): Boolean! }
 type AuthPayload { token: String!, expiresIn: Int!, user: User! }
+input AddPaymentMethodInput { clientId: ID!, type: String!, lastFour: String! }
+input CreateRefundInput { paymentId: ID!, amount: Float! }
 input CreatePaymentInput { clientId: ID!, merchantId: ID!, paymentMethodId: ID!, amount: Float!, currency: String!, description: String }
 type PaymentSummary { count: Int!, totalAmount: Float!, currency: String! }
 input PaymentFilterInput { clientId: ID, merchantId: ID, currency: String, status: PaymentStatus, dateFrom: String, dateTo: String, minAmount: Float, maxAmount: Float }

@@ -27,6 +27,15 @@
         <module>notification-service</module>
         <module>analytics-service</module>
         <module>service-host</module>
+        <module>identity-app</module>
+        <module>merchant-app</module>
+        <module>payment-app</module>
+        <module>paymentmethod-app</module>
+        <module>account-app</module>
+        <module>refund-app</module>
+        <module>transaction-app</module>
+        <module>notification-app</module>
+        <module>analytics-app</module>
         <module>gateway</module>
         <module>auth-service</module>
     </modules>

@@ -9,9 +9,11 @@ message DataResponse { string payload_json = 1; }
 service PaymentMethodService { rpc ValidatePaymentMethod(ValidatePaymentMethodRequest) returns (ValidatePaymentMethodResponse); }
 message ValidatePaymentMethodRequest { string payment_method_id = 1; string client_id = 2; }
 message ValidatePaymentMethodResponse { bool valid = 1; string status = 2; }
-service AccountService { rpc CheckAccount(CheckAccountRequest) returns (CheckAccountResponse); }
+service AccountService { rpc CheckAccount(CheckAccountRequest) returns (CheckAccountResponse); rpc DebitAccount(DebitAccountRequest) returns (DebitAccountResponse); }
 message CheckAccountRequest { string account_id = 1; string currency = 2; double amount = 3; }
 message CheckAccountResponse { bool allowed = 1; string status = 2; }
+message DebitAccountRequest { string payment_id = 1; string owner_id = 2; string currency = 3; string amount = 4; }
+message DebitAccountResponse { bool applied = 1; }
 service PaymentService { rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse); }
 message GetPaymentRequest { string payment_id = 1; }
-message GetPaymentResponse { string payment_id = 1; string client_id = 2; string merchant_id = 3; double amount = 4; string currency = 5; string status = 6; }
+message GetPaymentResponse { string payment_id = 1; string client_id = 2; string merchant_id = 3; double amount = 4; string currency = 5; string status = 6; string amount_decimal = 7; }

@@ -5,6 +5,9 @@ public interface ServiceClient {
  Map<String,Object> find(String service,String id);
  List<Map<String,Object>> searchPayments(Map<String,Object> filter,Map<String,Object> sort);
  Map<String,Object> paymentSummary(Map<String,Object> filter);
- Map<String,Object> createPayment(Map<String,Object> input);
- Map<String,Object> transitionPayment(String id,String status);
+ Map<String,Object> createPayment(Map<String,Object> input,String token);
+ Map<String,Object> transitionPayment(String id,String status,String token);
+ Map<String,Object> addPaymentMethod(Map<String,Object> input,String token);
+ boolean removePaymentMethod(String id,String token);
+ Map<String,Object> createRefund(String paymentId,java.math.BigDecimal amount,String token);
 }

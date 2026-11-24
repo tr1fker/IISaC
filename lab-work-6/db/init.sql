@@ -24,9 +24,16 @@ INSERT INTO payment.payments VALUES ('p1','u1','m1','pm1',125.50,'BYN','SUCCESS'
 INSERT INTO refund.refunds VALUES ('r1','p1',25.00,'BYN','SUCCESS','2026-01-12T09:00:00Z');
 INSERT INTO transaction.transactions VALUES ('t1','p1','u1',125.50,'BYN','PAYMENT','2026-01-10T12:01:00Z'),('t2','p1','u1',25.00,'BYN','REFUND','2026-01-12T09:00:00Z');
 INSERT INTO notification.notifications VALUES ('n1','u1','Payment completed','SENT','2026-01-10T12:01:00Z');
-INSERT INTO analytics.payment_statistics VALUES ('s1','m1','2026-01-01','2026-01-31',1,125.50,25.00,100.50),('s2','m1','2026-02-01','2026-02-28',1,45.00,0.00,45.00);
+INSERT INTO analytics.payment_statistics VALUES ('s1','m1','2026-01-01','2026-01-31',1,125.50,25.00,100.50),('s2','m1','2026-02-01','2026-02-28',0,0.00,0.00,0.00);
 
 CREATE TABLE payment.outbox (event_id varchar PRIMARY KEY, payment_id varchar NOT NULL, payload text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), published boolean NOT NULL DEFAULT false);
 CREATE TABLE transaction.processed_events (event_id varchar PRIMARY KEY);
 CREATE TABLE notification.processed_events (event_id varchar PRIMARY KEY);
 CREATE TABLE analytics.processed_events (event_id varchar PRIMARY KEY);
+
+CREATE TABLE refund.outbox (event_id varchar PRIMARY KEY, payment_id varchar NOT NULL, payload text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), published boolean NOT NULL DEFAULT false);
+CREATE TABLE analytics.payment_state (payment_id varchar PRIMARY KEY, merchant_id varchar NOT NULL, currency varchar NOT NULL, amount numeric(15,2) NOT NULL, status varchar NOT NULL);
+INSERT INTO analytics.payment_state VALUES ('p1','m1','BYN',125.50,'SUCCESS'),('p2','m1','BYN',45.00,'CREATED');
+
+CREATE UNIQUE INDEX users_email_unique ON identity.users (lower(email));
+INSERT INTO identity.users(id,name,email,role) VALUES ('admin','Administrator','admin@example.com','ADMIN');
